@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="id">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Attendance System</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100%;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .login-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .login-card h2 {
+            margin-top: 0;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box; /* Penting */
+            font-size: 16px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            opacity: 0.9;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        #error-message {
+            color: #e74c3c;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto 0;
+            display: none; /* Sembunyikan default */
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Main Application Styles */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #ffffff;
+            color: #333;
+            padding: 20px;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100%;
+            left: 0;
+            top: 0;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            font-size: 20px;
+            color: #764ba2;
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .sidebar-user img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background: #eee;
+        }
+
+        .sidebar-user-info span {
+            display: block;
+        }
+
+        .sidebar-user-info #user-name {
+            font-weight: 600;
+        }
+        
+        .sidebar-user-info #user-role {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .sidebar-nav {
+            flex-grow: 1;
+        }
+
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #555;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: #f4f4f9;
+            color: #667eea;
+        }
+
+        .sidebar-footer {
+            margin-top: 20px;
+        }
+
+        #logout-button {
+            width: 100%;
+            background: #fbebed;
+            color: #e74c3c;
+            box-shadow: none;
+            font-weight: 500;
+        }
+        
+        #logout-button:hover {
+            background: #f8e0e0;
+            opacity: 1;
+            transform: none;
+        }
+
+        .content-container {
+            flex-grow: 1;
+            padding: 30px;
+            background: #f9faff;
+            min-height: 100vh;
+            margin-left: 0;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .content-container.shifted {
+            margin-left: 250px;
+        }
+        
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .content-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .menu-toggle {
+            display: block;
+            font-size: 24px;
+            cursor: pointer;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            color: #667eea;
+        }
+
+        .content-page {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .content-page.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+        
+        th {
+            background: #fcfcfd;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        tr:hover {
+            background: #f9faff;
+        }
+        
+        .status {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-hadir { background: #e6f7ec; color: #008a45; }
+        .status-izin { background: #fff8e1; color: #f57c00; }
+        .status-sakit { background: #fbebed; color: #e74c3c; }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+            }
+            .content-container.shifted {
+                margin-left: 0;
+            }
+            .menu-toggle {
+                z-index: 1001;
+            }
+        }
+
+    </style>
+ </head>
+ <body>
+
+  <div id="login-page">
+    <div class="login-container">
+      <div class="login-card">
+        <h2>Selamat Datang</h2>
+        <p>Sistem Absensi Sekolah</p>
+        <form id="login-form">
+          <div class="input-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" required>
+          </div>
+          <div class="input-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" required>
+          </div>
+          <button type="submit">Login</button>
+          <div id="error-message">Username atau password salah.</div>
+          <div class="loader" id="login-loader"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-page" style="display: none;">
+    <div class="app-container">
+      <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <h3>Absensi</h3>
+        </div>
+        <div class="sidebar-user">
+          <img id="user-avatar" src="https://ui-avatars.com/api/?name=User&background=667eea&color=fff" alt="User Avatar">
+          <div class="sidebar-user-info">
+            <span id="user-name">Nama Pengguna</span>
+            <span id="user-role">Role</span>
+          </div>
+        </div>
+        <div class="sidebar-nav">
+          <ul>
+            <li><a href="#absensi" class="nav-link active">Absensi</a></li>
+            <li><a href="#laporan" class="nav-link">Laporan</a></li>
+          </ul>
+        </div>
+        <div class="sidebar-footer">
+          <button id="logout-button">Logout</button>
+        </div>
+      </nav>
+
+      <main class="content-container" id="mainContent">
+        <div class="content-header">
+          <span class="menu-toggle" id="menuToggle">&#9776;</span>
+          <h1 id="page-title">Absensi</h1>
+        </div>
+
+        <div id="absensi-page" class="content-page active">
+          <div class="card" id="attendance-form-card">
+            <h3>Rekam Kehadiran</h3>
+            <form id="attendance-form">
+                <div class="form-group">
+                    <label for="student-name">Nama Siswa (atau ID)</label>
+                    <input type="text" id="student-name" list="student-list" required>
+                    <datalist id="student-list">
+                        </datalist>
+                </div>
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" required>
+                        <option value="Hadir">Hadir</option>
+                        <option value="Izin">Izin</option>
+                        <option value="Sakit">Sakit</option>
+                    </select>
+                </div>
+                <div class="form-group" id="notes-group" style="display: none;">
+                    <label for="notes">Keterangan (mis. surat dokter)</label>
+                    <input type="text" id="notes">
+                </div>
+                <button type="submit">Simpan</button>
+                <div class="loader" id="attendance-loader"></div>
+            </form>
+          </div>
+        </div>
+
+        <div id="laporan-page" class="content-page">
+          <div class="card">
+            <h3>Filter Laporan</h3>
+            <form id="filter-form">
+                <div class="form-group">
+                    <label for="filter-date">Tanggal</label>
+                    <input type="date" id="filter-date">
+                </div>
+                <div class="form-group">
+                    <label for="filter-student">Nama Siswa</label>
+                    <input type="text" id="filter-student" list="student-list">
+                </div>
+                <button type="button" id="filter-button">Terapkan Filter</button>
+                <button type="button" id="reset-filter-button">Reset</button>
+            </form>
+          </div>
+          <div class="card">
+            <h3>Data Absensi</h3>
+            <div class="table-container">
+              <table id="attendance-table">
+                <thead>
+                  <tr>
+                    <th>Tanggal</th>
+                    <th>Nama</th>
+                    <th>Status</th>
+                    <th>Keterangan</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="attendance-table-body">
+                  </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+
+  <script>
+        // Logika JavaScript Anda dari file index.txt
+        let allData = [];
+        let currentUser = null;
+        let sidebarOpen = false;
+
+        const dataHandler = {
+            onDataChanged: (data) => {
+                allData = data;
+                renderApp();
+            },
+            onError: (error) => {
+                console.error('SDK Error:', error);
+                alert('Terjadi kesalahan. Coba muat ulang halaman.');
+            }
+        };
+
+        async function initializeApp() {
+            const sdkResult = await window.dataSdk.init(dataHandler);
+            if (!sdkResult.isOk) {
+                alert('Gagal memuat data awal.');
+                return;
+            }
+
+            // Cek jika ada pengguna di local storage
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                currentUser = JSON.parse(storedUser);
+                showPage('app');
+            } else {
+                showPage('login');
+            }
+            
+            // Cek jika data kosong, buat sample data
+            if (allData.length === 0 && sdkResult.isOk) {
+                setTimeout(async () => {
+                    await createSampleUsers();
+                }, 1000);
+            }
+        }
+
+        // Start the application
+        initializeApp();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768 && sidebarOpen) {
+                document.getElementById('mainContent').classList.add('shifted');
+            } else {
+                document.getElementById('mainContent').classList.remove('shifted');
+            }
+        });
+    </script>
+ </body>
+</html>
